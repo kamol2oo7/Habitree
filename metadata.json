@@ -1,0 +1,6 @@
+{
+  "name": "Habitree",
+  "description": "A beautiful HabitKit-inspired tracker where your consistency nurtures trees, styled with a high-contrast organic palette of Forest Sage, Slate Blues, and Terracotta Clays.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
