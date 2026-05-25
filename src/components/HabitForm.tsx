@@ -105,6 +105,34 @@ export default function HabitForm({ isDark, editHabit, onSave, onClose }: HabitF
   const [reminderTime, setReminderTime] = useState('');
   const [reminderActive, setReminderActive] = useState(false);
 
+  // Instant trigger to test system and in-app reminder displays
+  const triggerTestNotification = () => {
+    // 1. Dispatch desktop push notification of browser if permission has been granted
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        const imageUri = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none"%3E%3Crect x="36" y="78" width="28" height="8" rx="1.5" fill="%234E7D5B"%3E%3C/rect%3E%3Cpath d="M50 73C47.5 52 42 39 48 17" stroke="%234E7D5B" stroke-width="7.5" stroke-linecap="round"/%3E%3C/svg%3E';
+        new Notification(`Nurture: ${name || 'Nudge Reminder'}`, {
+          body: `Keep up your garden consistency! Trigger time is set for ${reminderTime || '08:00'} today. 🌳`,
+          icon: imageUri
+        });
+      } catch (err) {
+        console.warn('Silent fallback for desktop permission', err);
+      }
+    }
+
+    // 2. Dispatch a Custom DOM event so App.tsx intercepts it and shows the stunning sliding notice instantly 
+    const testEvent = new CustomEvent('habitree-test-reminder', {
+      detail: {
+        habitId: editHabit?.id || 'temp-test-id',
+        title: `Nurture: ${name || 'My Habitree Path'}`,
+        body: description || `This is a live test preview of your scheduled reminder! Maintain your streak to help your ${treeSpecies} tree species thrive.`,
+        time: reminderTime || '08:00',
+        color: color
+      }
+    });
+    window.dispatchEvent(testEvent);
+  };
+
   // Load existing habit info if editing
   useEffect(() => {
     if (editHabit) {
@@ -543,6 +571,22 @@ export default function HabitForm({ isDark, editHabit, onSave, onClose }: HabitF
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Instant visual/audio checker */}
+                <div className="pt-2.5 flex justify-start">
+                  <button
+                    type="button"
+                    onClick={triggerTestNotification}
+                    className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer border ${
+                      isDark 
+                        ? 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border-white/5' 
+                        : 'bg-[#FAF8F5] hover:bg-[#EAE1D5] text-[#4E7D5B] border-[#4E7D5B]/30'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#4E7D5B]" />
+                    <span>⚡ Preview and Test Reminder Now</span>
+                  </button>
                 </div>
               </div>
             )}

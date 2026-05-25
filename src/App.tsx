@@ -114,12 +114,12 @@ export default function App() {
       try {
         setHabits(JSON.parse(cached));
       } catch (err) {
-        setHabits(SEED_HABITS);
+        setHabits([]);
       }
     } else {
-      // First load: seed standard gorgeous values so they don't look blank
-      setHabits(SEED_HABITS);
-      localStorage.setItem('habitree:habits', JSON.stringify(SEED_HABITS));
+      // First load: start completely clean with zero active habits
+      setHabits([]);
+      localStorage.setItem('habitree:habits', JSON.stringify([]));
     }
   }, []);
 
@@ -195,6 +195,35 @@ export default function App() {
         return next;
       });
     }
+  }, [habits]);
+
+  // Listen for custom test notification events triggered by HabitForm.tsx
+  useEffect(() => {
+    const handleTestReminder = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        const { habitId, title, body, time, color } = customEvent.detail;
+        
+        // Play vector synth chime sound
+        playChime();
+
+        // Push new gorgeous toast alert to stack
+        setInAppNotifications((prev) => [
+          ...prev.filter(x => x.habitId !== habitId),
+          {
+            id: `test-notif-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            habitId: habitId || 'temp-test-id',
+            title: title || 'Nurture Habit',
+            body: body || 'Time for consistency nudge!',
+            time: time || '08:00',
+            color: color || 'lime'
+          }
+        ]);
+      }
+    };
+
+    window.addEventListener('habitree-test-reminder', handleTestReminder);
+    return () => window.removeEventListener('habitree-test-reminder', handleTestReminder);
   }, [habits]);
 
   // Active loop checker (scans every 10 seconds for user reminders)
@@ -341,11 +370,6 @@ export default function App() {
     saveHabitsToStateAndCache([]);
   };
 
-  // Overwrite to high-fidelity seed values
-  const handleResetToDemo = () => {
-    saveHabitsToStateAndCache(SEED_HABITS);
-  };
-
   // Import JSON backup text
   const handleImportJSON = (jsonStr: string): boolean => {
     try {
@@ -391,6 +415,104 @@ export default function App() {
       className={`min-h-screen ${isDark ? 'bg-[#141210] text-[#ECE9E0]' : 'bg-[#FAF6F0] text-[#2C2925]'} flex flex-col items-center justify-between font-sans subpixel-antialiased selection:bg-[#4E7D5B]/30 selection:text-[#4E7D5B] w-full transition-colors duration-200 overflow-x-hidden`}
     >
       
+      {/* Absolute Overlay Container for Reminders toasts (Apple-style push notices) */}
+      <div 
+        id="in-app-notifications-overlay" 
+        className="fixed top-5 right-4 left-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-3 max-w-sm pointer-events-none select-none"
+      >
+        <AnimatePresence>
+          {inAppNotifications.map((notif) => {
+            const h = habits.find((x) => x.id === notif.habitId);
+            const accentColor = h ? COLOR_MAP[h.color]?.accent || '#4E7D5B' : '#4E7D5B';
+            return (
+              <motion.div
+                key={notif.id}
+                initial={{ opacity: 0, y: -24, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92, y: -10 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                className={`pointer-events-auto flex flex-col p-4 sm:p-5 rounded-2xl border shadow-xl backdrop-blur-md relative overflow-hidden transition-all ${
+                  isDark 
+                    ? 'bg-[#1C1A18]/95 border-white/5 shadow-black/40 text-[#FAF7F2]' 
+                    : 'bg-[#FFFFFF]/95 border-[#E8E2D9] shadow-neutral-200/50 text-[#2C2925]'
+                }`}
+              >
+                {/* Visual Accent Pill Marker */}
+                <div 
+                  className="absolute top-0 left-0 right-0 h-1" 
+                  style={{ backgroundColor: accentColor }} 
+                />
+
+                <div className="flex items-start gap-3.5 mt-1">
+                  {/* Icon Avatar */}
+                  <div 
+                    className="p-2 sm:p-2.5 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ 
+                      backgroundColor: `${accentColor}15`, 
+                      color: accentColor,
+                      border: `1px solid ${accentColor}30` 
+                    }}
+                  >
+                    {h ? (
+                      <HabitIcon name={h.icon} className="w-4.5 h-4.5" />
+                    ) : (
+                      <Bell className="w-4.5 h-4.5" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono tracking-wider uppercase font-bold text-neutral-400">
+                        🔔 Nudge Reminder ({notif.time})
+                      </span>
+                    </div>
+                    <h4 className={`text-sm font-bold tracking-tight mt-0.5 truncate ${isDark ? 'text-white' : 'text-[#1C1E1C]'}`}>
+                      {notif.title}
+                    </h4>
+                    <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isDark ? 'text-white/50' : 'text-[#706B63]'}`}>
+                      {notif.body}
+                    </p>
+                  </div>
+
+                  {/* Close Dismiss */}
+                  <button
+                    onClick={() => setInAppNotifications((prev) => prev.filter((x) => x.id !== notif.id))}
+                    className={`absolute top-3.5 right-3.5 p-1 rounded-lg transition-colors cursor-pointer ${
+                      isDark ? 'hover:bg-white/5 text-neutral-500 hover:text-white' : 'hover:bg-black/5 text-neutral-400 hover:text-neutral-800'
+                    }`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Instant Actions */}
+                <div className="flex items-center justify-end gap-2.5 mt-4 pt-3.5 border-t border-dashed border-neutral-500/10 dark:border-white/5">
+                  <button
+                    onClick={() => setInAppNotifications((prev) => prev.filter((x) => x.id !== notif.id))}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-colors cursor-pointer ${
+                      isDark 
+                        ? 'hover:bg-white/5 text-[#9D9A90]' 
+                        : 'hover:bg-[#FAF8F5] text-[#706B63]'
+                    }`}
+                  >
+                    Later
+                  </button>
+                  <button
+                    onClick={() => handleCompleteFromNotification(notif.habitId, notif.id)}
+                    className="px-3.5 py-1.5 rounded-lg bg-[#4E7D5B] hover:bg-[#3D6247] text-white text-xs font-bold tracking-tight transition-all active:scale-95 shadow-sm flex items-center gap-1 cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Done</span>
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
       {/* Elegant Floating Top Navigation */}
       <div className="sticky top-3 z-40 w-full max-w-7xl px-4 sm:px-6 mt-3 select-none">
         <header className={`w-full h-15 sm:h-16 border rounded-2xl flex items-center justify-between px-5 sm:px-6 shadow-md backdrop-blur-md transition-all duration-350 ${
@@ -449,11 +571,6 @@ export default function App() {
                 <Moon className="w-4 h-4 text-[#706B63]" />
               )}
             </button>
-
-            <div className={`text-[11px] font-mono hidden md:flex ${isDark ? 'text-[#4E7D5B]/70' : 'text-[#4E7D5B]'} items-center gap-1.5`}>
-              <span className="inline-block w-2 h-2 rounded-full bg-[#4E7D5B] animate-pulse" />
-              <span>Synchronized</span>
-            </div>
           </div>
         </header>
       </div>
@@ -498,7 +615,6 @@ export default function App() {
             {currentView === 'settings' && (
               <SettingsView
                 isDark={isDark}
-                onResetToDemo={handleResetToDemo}
                 onClearAll={handleClearAll}
                 onImportJSON={handleImportJSON}
                 habits={habits}

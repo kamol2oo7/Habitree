@@ -279,7 +279,7 @@ export default function AnalyticsView({ isDark, habits }: AnalyticsViewProps) {
           </div>
         </div>
 
-        {/* ECO-TIMELINE PROGRESS UNIT */}
+        {/* ECO-TIMELINE SYNCHRONIZER PROGRESS PANEL */}
         <TimelineProgress isDark={isDark} />
 
         {/* Dual grid for Pie & Trend Spline */}

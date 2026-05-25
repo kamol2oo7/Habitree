@@ -4,7 +4,6 @@ import { Trash2, AlertOctagon, Download, RefreshCw, BookOpen, CalendarDays } fro
 
 interface SettingsViewProps {
   isDark: boolean;
-  onResetToDemo: () => void;
   onClearAll: () => void;
   onImportJSON: (jsonStr: string) => boolean;
   habits: Habit[];
@@ -14,7 +13,6 @@ interface SettingsViewProps {
 
 export default function SettingsView({ 
   isDark, 
-  onResetToDemo, 
   onClearAll, 
   onImportJSON, 
   habits,
@@ -23,7 +21,6 @@ export default function SettingsView({
 }: SettingsViewProps) {
   const [importText, setImportText] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
 
   const handleExport = () => {
@@ -137,66 +134,6 @@ export default function SettingsView({
                 <span className="text-[10px] opacity-70 font-mono tracking-tight leading-none">Calendar Aligned Grid</span>
               </button>
             </div>
-          </div>
-
-          {/* Preset Demo Re-seed */}
-          <div className={`border rounded-2xl p-5 space-y-4 ${
-            isDark ? 'bg-[#1C1A18] border-white/5' : 'bg-[#FFFFFF] border-[#E4E7E4] shadow-sm'
-          }`}>
-            <div className="flex items-start gap-4">
-              <div className={`p-2.5 rounded-xl border ${
-                isDark ? 'bg-[#4E7D5B]/10 border-[#4E7D5B]/20 text-[#4E7D5B]' : 'bg-[#4E7D5B]/15 border-[#4E7D5B]/35 text-[#4E7D5B]'
-              }`}>
-                <RefreshCw className="w-5 h-5 animate-spin-slow" />
-              </div>
-              <div>
-                <h3 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-[#1C1E1C]'}`}>Full Demo Reset</h3>
-                <p className={`text-xs mt-1 ${isDark ? 'text-white/40' : 'text-[#5C615C]'}`}>
-                  Overwrite current local listings with 5 preset active habit trees stretching across 90 days of synthetic completion logs to immediately see rich analytics.
-                </p>
-              </div>
-            </div>
-
-            {isConfirmingReset ? (
-              <div className="flex gap-2 w-full">
-                <button
-                  type="button"
-                  id="reset-demo-cancel"
-                  onClick={() => setIsConfirmingReset(false)}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all text-center border cursor-pointer ${
-                    isDark 
-                      ? 'border-white/10 text-[#9D9A90] hover:bg-white/5' 
-                      : 'border-[#E4E7E4] text-[#706B63] hover:bg-[#FAF8F5]'
-                  }`}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  id="reset-demo-confirm"
-                  onClick={() => {
-                    onResetToDemo();
-                    setIsConfirmingReset(false);
-                    setMessage({ type: 'success', text: 'System seeds restored.' });
-                  }}
-                  className="flex-1 py-2.5 bg-[#4E7D5B] text-white rounded-xl text-xs font-bold transition-all text-center cursor-pointer hover:bg-[#3D6247]"
-                >
-                  Confirm Reset
-                </button>
-              </div>
-            ) : (
-              <button
-                id="reset-demo-btn"
-                onClick={() => setIsConfirmingReset(true)}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-center cursor-pointer ${
-                  isDark 
-                    ? 'bg-[#4E7D5B] hover:bg-[#5E956D] text-[#FAF7F2]' 
-                    : 'bg-[#4E7D5B] hover:bg-[#3D6247] text-white shadow-sm'
-                }`}
-              >
-                Reset to High-Fidelity Seeds
-              </button>
-            )}
           </div>
 
           {/* Database Wipe */}

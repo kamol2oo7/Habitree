@@ -119,7 +119,7 @@ export default function ForestView({ isDark, habits, onToggleDate, onOpenAddModa
             </button>
           </div>
         ) : (
-          <div className="absolute inset-0 flex items-end justify-center px-8 pb-3 overflow-x-auto select-none scrollbar-none">
+          <div className="absolute inset-0 flex items-end justify-center px-8 pb-3 overflow-x-auto overflow-y-hidden select-none scrollbar-none">
             <div className="flex items-end justify-center w-full max-w-5xl gap-4 sm:gap-8 md:gap-11 pb-px">
               {habits.map((h) => {
                 const { currentStreak } = calculateStreaks(h.history);
